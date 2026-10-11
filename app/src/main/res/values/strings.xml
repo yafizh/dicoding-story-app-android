@@ -1,3 +1,56 @@
 <resources>
-    <string name="app_name">Story app</string>
+    <string name="app_name">Story App</string>
+
+    <string name="login_title">Welcome Back!</string>
+    <string name="login_message">Sign in to share and discover stories from the Dicoding community.</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_message">Join now and share your stories with the Dicoding community.</string>
+    <string name="hint_name">Name</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_description">Description</string>
+    <string name="button_login">Sign In</string>
+    <string name="button_register">Register</string>
+    <string name="to_register">Don\'t have an account? Register</string>
+    <string name="to_login">Already have an account? Sign In</string>
+    <string name="login_success">Welcome, %1$s!</string>
+    <string name="register_success_title">Registration Successful</string>
+    <string name="register_success_message">Your account has been created. Please sign in to continue.</string>
+
+    <string name="title_story">Story</string>
+    <string name="title_new_story">New Story</string>
+    <string name="title_detail">Story Detail</string>
+    <string name="menu_language">Change Language</string>
+    <string name="menu_logout">Logout</string>
+    <string name="add_story">Add story</string>
+    <string name="no_story">No stories yet. Be the first to share one!</string>
+    <string name="error_load_stories">%1$s\nPull down to try again.</string>
+
+    <string name="button_camera">Camera</string>
+    <string name="button_gallery">Gallery</string>
+    <string name="button_upload">Upload</string>
+    <string name="upload_success">Story uploaded successfully</string>
+
+    <string name="error_invalid_email">Invalid email format</string>
+    <string name="error_password_length">Password must be at least 8 characters</string>
+    <string name="error_empty_name">Name cannot be empty</string>
+    <string name="error_invalid_form">Please fill in the form correctly</string>
+    <string name="error_empty_image">Please select a photo first</string>
+    <string name="error_empty_description">Description cannot be empty</string>
+    <string name="error_process_image">Failed to process the image</string>
+    <string name="error_no_camera">No camera app available</string>
+    <string name="error_connection">Unable to connect to the server. Please check your internet connection.</string>
+    <string name="dialog_failed_title">Failed</string>
+    <string name="ok">OK</string>
+
+    <string name="cd_app_logo">App logo</string>
+    <string name="cd_story_photo">Story photo</string>
+    <string name="cd_preview_photo">Selected photo preview</string>
+
+    <string name="widget_name">Story Widget</string>
+    <string name="widget_description">Displays the latest stories</string>
+    <string name="widget_empty">No stories to show. Make sure you are signed in.</string>
+
+    <string name="transition_photo" translatable="false">photo</string>
+    <string name="transition_name" translatable="false">name</string>
 </resources>

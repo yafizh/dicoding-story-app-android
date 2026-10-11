@@ -1,0 +1,53 @@
+<resources>
+    <string name="app_name">Story App</string>
+
+    <string name="login_title">Selamat Datang Kembali!</string>
+    <string name="login_message">Masuk untuk berbagi dan menemukan cerita dari komunitas Dicoding.</string>
+    <string name="register_title">Buat Akun</string>
+    <string name="register_message">Bergabunglah sekarang dan bagikan ceritamu bersama komunitas Dicoding.</string>
+    <string name="hint_name">Nama</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Kata Sandi</string>
+    <string name="hint_description">Deskripsi</string>
+    <string name="button_login">Masuk</string>
+    <string name="button_register">Daftar</string>
+    <string name="to_register">Belum punya akun? Daftar</string>
+    <string name="to_login">Sudah punya akun? Masuk</string>
+    <string name="login_success">Selamat datang, %1$s!</string>
+    <string name="register_success_title">Pendaftaran Berhasil</string>
+    <string name="register_success_message">Akun kamu berhasil dibuat. Silakan masuk untuk melanjutkan.</string>
+
+    <string name="title_story">Cerita</string>
+    <string name="title_new_story">Cerita Baru</string>
+    <string name="title_detail">Detail Cerita</string>
+    <string name="menu_language">Ganti Bahasa</string>
+    <string name="menu_logout">Keluar</string>
+    <string name="add_story">Tambah cerita</string>
+    <string name="no_story">Belum ada cerita. Jadilah yang pertama membagikannya!</string>
+    <string name="error_load_stories">%1$s\nTarik ke bawah untuk mencoba lagi.</string>
+
+    <string name="button_camera">Kamera</string>
+    <string name="button_gallery">Galeri</string>
+    <string name="button_upload">Unggah</string>
+    <string name="upload_success">Cerita berhasil diunggah</string>
+
+    <string name="error_invalid_email">Format email tidak valid</string>
+    <string name="error_password_length">Kata sandi minimal 8 karakter</string>
+    <string name="error_empty_name">Nama tidak boleh kosong</string>
+    <string name="error_invalid_form">Mohon isi formulir dengan benar</string>
+    <string name="error_empty_image">Silakan pilih foto terlebih dahulu</string>
+    <string name="error_empty_description">Deskripsi tidak boleh kosong</string>
+    <string name="error_process_image">Gagal memproses gambar</string>
+    <string name="error_no_camera">Tidak ada aplikasi kamera</string>
+    <string name="error_connection">Tidak dapat terhubung ke server. Periksa koneksi internet kamu.</string>
+    <string name="dialog_failed_title">Gagal</string>
+    <string name="ok">OK</string>
+
+    <string name="cd_app_logo">Logo aplikasi</string>
+    <string name="cd_story_photo">Foto cerita</string>
+    <string name="cd_preview_photo">Pratinjau foto yang dipilih</string>
+
+    <string name="widget_name">Widget Cerita</string>
+    <string name="widget_description">Menampilkan cerita terbaru</string>
+    <string name="widget_empty">Tidak ada cerita. Pastikan kamu sudah masuk.</string>
+</resources>
