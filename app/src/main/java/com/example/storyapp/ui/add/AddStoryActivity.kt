@@ -1,6 +1,8 @@
 package com.example.storyapp.ui.add
 
+import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toast
@@ -10,6 +12,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
@@ -21,6 +24,8 @@ import com.example.storyapp.utils.applySystemBarsPadding
 import com.example.storyapp.utils.createCameraImageUri
 import com.example.storyapp.utils.reduceImageFile
 import com.example.storyapp.widget.StoryWidget
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -29,6 +34,7 @@ class AddStoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddStoryBinding
     private val viewModel: AddStoryViewModel by viewModels { ViewModelFactory.getInstance(this) }
+    private val fusedLocationClient by lazy { LocationServices.getFusedLocationProviderClient(this) }
 
     private val galleryLauncher = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -40,6 +46,17 @@ class AddStoryActivity : AppCompatActivity() {
         ActivityResultContracts.TakePicture()
     ) { isSuccess ->
         viewModel.onCameraResult(isSuccess)
+    }
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            getCurrentLocation()
+        } else {
+            binding.switchLocation.isChecked = false
+            Toast.makeText(this, R.string.error_location_permission, Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,9 +71,18 @@ class AddStoryActivity : AppCompatActivity() {
         binding.btnCamera.setOnClickListener { startCamera() }
         binding.btnGallery.setOnClickListener { startGallery() }
         binding.buttonAdd.setOnClickListener { uploadStory() }
+        binding.switchLocation.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) getCurrentLocation() else viewModel.setLocation(null)
+        }
 
         viewModel.imageUri.observe(this) { uri ->
             Glide.with(this).load(uri).into(binding.ivPreview)
+        }
+        viewModel.location.observe(this) { location ->
+            binding.tvLocation.isVisible = location != null
+            if (location != null) {
+                binding.tvLocation.text = getString(R.string.location_format, location.latitude, location.longitude)
+            }
         }
         viewModel.uploadResult.observe(this) { result ->
             when (result) {
@@ -93,6 +119,36 @@ class AddStoryActivity : AppCompatActivity() {
         } catch (e: ActivityNotFoundException) {
             Toast.makeText(this, R.string.error_no_camera, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun getCurrentLocation() {
+        val isFineGranted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val isCoarseGranted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!isFineGranted && !isCoarseGranted) {
+            locationPermissionLauncher.launch(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+            )
+            return
+        }
+
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    viewModel.setLocation(location)
+                } else {
+                    onLocationUnavailable()
+                }
+            }
+            .addOnFailureListener { onLocationUnavailable() }
+    }
+
+    private fun onLocationUnavailable() {
+        binding.switchLocation.isChecked = false
+        Toast.makeText(this, R.string.error_location_unavailable, Toast.LENGTH_SHORT).show()
     }
 
     private fun uploadStory() {
@@ -132,5 +188,6 @@ class AddStoryActivity : AppCompatActivity() {
         binding.buttonAdd.isEnabled = !isLoading
         binding.btnCamera.isEnabled = !isLoading
         binding.btnGallery.isEnabled = !isLoading
+        binding.switchLocation.isEnabled = !isLoading
     }
 }

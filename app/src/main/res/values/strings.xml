@@ -43,6 +43,17 @@
     <string name="dialog_failed_title">Failed</string>
     <string name="ok">OK</string>
 
+    <string name="menu_map">Story Map</string>
+    <string name="title_map">Story Map</string>
+    <string name="no_story_location">No stories with location yet</string>
+    <string name="error_load_more">Failed to load more stories</string>
+    <string name="button_retry">Retry</string>
+    <string name="cancel">Cancel</string>
+    <string name="switch_location">Share my current location</string>
+    <string name="location_format">Location: %1$.5f, %2$.5f</string>
+    <string name="error_location_permission">Location permission denied</string>
+    <string name="error_location_unavailable">Unable to get current location</string>
+
     <string name="cd_app_logo">App logo</string>
     <string name="cd_story_photo">Story photo</string>
     <string name="cd_preview_photo">Selected photo preview</string>

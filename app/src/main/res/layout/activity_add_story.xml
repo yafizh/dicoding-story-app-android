@@ -83,6 +83,23 @@
                 android:inputType="textMultiLine|textCapSentences"
                 android:minLines="5" />
 
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/switch_location" />
+
+            <TextView
+                android:id="@+id/tv_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/gray"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:text="Location: -6.20000, 106.81667"
+                tools:visibility="visible" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_add"
                 style="@style/Widget.StoryApp.Button"

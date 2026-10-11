@@ -16,9 +16,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
 import androidx.core.view.isVisible
+import androidx.paging.CombinedLoadStates
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.storyapp.R
-import com.example.storyapp.data.ResultState
 import com.example.storyapp.data.remote.response.ListStoryItem
 import com.example.storyapp.databinding.ActivityMainBinding
 import com.example.storyapp.databinding.ItemStoryBinding
@@ -26,6 +28,7 @@ import com.example.storyapp.ui.ViewModelFactory
 import com.example.storyapp.ui.add.AddStoryActivity
 import com.example.storyapp.ui.detail.DetailActivity
 import com.example.storyapp.ui.login.LoginActivity
+import com.example.storyapp.ui.maps.MapsActivity
 import com.example.storyapp.utils.applySystemBarsPadding
 import com.example.storyapp.widget.StoryWidget
 
@@ -34,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels { ViewModelFactory.getInstance(this) }
     private val storyAdapter = StoryAdapter { story, itemBinding -> openDetail(story, itemBinding) }
+    private var previousRefreshState: LoadState? = null
     private var scrollToTopOnNextLoad = false
 
     private val addStoryLauncher = registerForActivityResult(
@@ -41,7 +45,7 @@ class MainActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             scrollToTopOnNextLoad = true
-            viewModel.getStories()
+            storyAdapter.refresh()
         }
     }
 
@@ -55,22 +59,34 @@ class MainActivity : AppCompatActivity() {
 
         binding.rvStory.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = storyAdapter
+            adapter = storyAdapter.withLoadStateFooter(
+                footer = LoadingStateAdapter { storyAdapter.retry() }
+            )
         }
-        binding.swipeRefresh.setOnRefreshListener { viewModel.getStories() }
+        storyAdapter.addLoadStateListener { loadStates -> renderLoadStates(loadStates) }
+        storyAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                if (scrollToTopOnNextLoad && positionStart == 0) {
+                    binding.rvStory.scrollToPosition(0)
+                    scrollToTopOnNextLoad = false
+                }
+            }
+        })
+        binding.swipeRefresh.setOnRefreshListener { storyAdapter.refresh() }
         binding.fabAdd.setOnClickListener {
             addStoryLauncher.launch(Intent(this, AddStoryActivity::class.java))
         }
 
-        viewModel.session.observe(this) { user ->
+        viewModel.getSession().observe(this) { user ->
             if (!user.isLogin) {
                 StoryWidget.refresh(this)
                 navigateToLogin()
-            } else if (viewModel.stories.value == null) {
-                viewModel.getStories()
+            } else if (!viewModel.stories.hasObservers()) {
+                viewModel.stories.observe(this) { pagingData ->
+                    storyAdapter.submitData(lifecycle, pagingData)
+                }
             }
         }
-        viewModel.stories.observe(this) { result -> renderStories(result) }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -79,6 +95,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+        R.id.action_map -> {
+            startActivity(Intent(this, MapsActivity::class.java))
+            true
+        }
         R.id.action_language -> {
             startActivity(Intent(Settings.ACTION_LOCALE_SETTINGS))
             true
@@ -90,54 +110,39 @@ class MainActivity : AppCompatActivity() {
         else -> super.onOptionsItemSelected(item)
     }
 
-    private fun renderStories(result: ResultState<List<ListStoryItem>>) {
-        when (result) {
-            is ResultState.Loading -> {
-                binding.progressBar.isVisible = !binding.swipeRefresh.isRefreshing
-                binding.tvMessage.isVisible = false
-            }
-            is ResultState.Success -> {
-                stopLoading()
-                storyAdapter.submitList(result.data) {
-                    if (scrollToTopOnNextLoad) {
-                        binding.rvStory.scrollToPosition(0)
-                        scrollToTopOnNextLoad = false
-                    }
-                }
-                binding.tvMessage.text = getString(R.string.no_story)
-                binding.tvMessage.isVisible = result.data.isEmpty()
-            }
-            is ResultState.Error -> {
-                stopLoading()
-                val message = result.message ?: getString(R.string.error_connection)
-                if (storyAdapter.itemCount == 0) {
-                    binding.tvMessage.text = getString(R.string.error_load_stories, message)
-                    binding.tvMessage.isVisible = true
-                } else {
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
+    private fun renderLoadStates(loadStates: CombinedLoadStates) {
+        val refreshState = loadStates.refresh
+        val isListEmpty = storyAdapter.itemCount == 0
 
-    private fun stopLoading() {
-        binding.progressBar.isVisible = false
-        binding.swipeRefresh.isRefreshing = false
+        binding.progressBar.isVisible = refreshState is LoadState.Loading && !binding.swipeRefresh.isRefreshing
+        if (refreshState !is LoadState.Loading) binding.swipeRefresh.isRefreshing = false
+
+        when {
+            refreshState is LoadState.Error && isListEmpty -> {
+                val message = refreshState.error.localizedMessage ?: getString(R.string.error_connection)
+                binding.tvMessage.text = getString(R.string.error_load_stories, message)
+                binding.tvMessage.isVisible = true
+            }
+            refreshState is LoadState.NotLoading && loadStates.append.endOfPaginationReached && isListEmpty -> {
+                binding.tvMessage.text = getString(R.string.no_story)
+                binding.tvMessage.isVisible = true
+            }
+            else -> binding.tvMessage.isVisible = false
+        }
+
+        if (refreshState is LoadState.Error && !isListEmpty && previousRefreshState !is LoadState.Error) {
+            Toast.makeText(this, R.string.error_connection, Toast.LENGTH_SHORT).show()
+        }
+        previousRefreshState = refreshState
     }
 
     private fun openDetail(story: ListStoryItem, itemBinding: ItemStoryBinding) {
-        val intent = Intent(this, DetailActivity::class.java).apply {
-            putExtra(DetailActivity.EXTRA_NAME, story.name)
-            putExtra(DetailActivity.EXTRA_PHOTO_URL, story.photoUrl)
-            putExtra(DetailActivity.EXTRA_DESCRIPTION, story.description)
-            putExtra(DetailActivity.EXTRA_CREATED_AT, story.createdAt)
-        }
         val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
             this,
             Pair<View, String>(itemBinding.ivItemPhoto, getString(R.string.transition_photo)),
             Pair<View, String>(itemBinding.tvItemName, getString(R.string.transition_name))
         )
-        startActivity(intent, options.toBundle())
+        startActivity(DetailActivity.createIntent(this, story), options.toBundle())
     }
 
     private fun navigateToLogin() {

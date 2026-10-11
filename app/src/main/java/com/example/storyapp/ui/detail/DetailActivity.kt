@@ -1,5 +1,7 @@
 package com.example.storyapp.ui.detail
 
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
@@ -7,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.storyapp.R
+import com.example.storyapp.data.remote.response.ListStoryItem
 import com.example.storyapp.databinding.ActivityDetailBinding
 import com.example.storyapp.utils.applySystemBarsPadding
 import com.example.storyapp.utils.toFormattedDate
@@ -39,9 +42,17 @@ class DetailActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val EXTRA_NAME = "extra_name"
-        const val EXTRA_PHOTO_URL = "extra_photo_url"
-        const val EXTRA_DESCRIPTION = "extra_description"
-        const val EXTRA_CREATED_AT = "extra_created_at"
+        private const val EXTRA_NAME = "extra_name"
+        private const val EXTRA_PHOTO_URL = "extra_photo_url"
+        private const val EXTRA_DESCRIPTION = "extra_description"
+        private const val EXTRA_CREATED_AT = "extra_created_at"
+
+        fun createIntent(context: Context, story: ListStoryItem): Intent =
+            Intent(context, DetailActivity::class.java).apply {
+                putExtra(EXTRA_NAME, story.name)
+                putExtra(EXTRA_PHOTO_URL, story.photoUrl)
+                putExtra(EXTRA_DESCRIPTION, story.description)
+                putExtra(EXTRA_CREATED_AT, story.createdAt)
+            }
     }
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.storyapp.data.ResultState
 import com.example.storyapp.data.StoryRepository
+import com.example.storyapp.utils.wrapEspressoIdlingResource
 import kotlinx.coroutines.launch
 
 class LoginViewModel(private val repository: StoryRepository) : ViewModel() {
@@ -16,7 +17,9 @@ class LoginViewModel(private val repository: StoryRepository) : ViewModel() {
     fun login(email: String, password: String) {
         _loginResult.value = ResultState.Loading
         viewModelScope.launch {
-            _loginResult.value = repository.login(email, password)
+            wrapEspressoIdlingResource {
+                _loginResult.value = repository.login(email, password)
+            }
         }
     }
 }

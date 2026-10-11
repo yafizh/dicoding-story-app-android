@@ -1,5 +1,13 @@
 package com.example.storyapp.data
 
+import androidx.lifecycle.LiveData
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.liveData
+import androidx.room.withTransaction
+import com.example.storyapp.data.local.room.StoryDatabase
 import com.example.storyapp.data.pref.UserModel
 import com.example.storyapp.data.pref.UserPreference
 import com.example.storyapp.data.remote.response.BasicResponse
@@ -18,12 +26,19 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class StoryRepository private constructor(
     private val apiService: ApiService,
-    private val userPreference: UserPreference
+    private val userPreference: UserPreference,
+    private val storyDatabase: StoryDatabase
 ) {
 
     fun getSession(): Flow<UserModel> = userPreference.getSession()
 
-    suspend fun logout() = userPreference.logout()
+    suspend fun logout() {
+        storyDatabase.withTransaction {
+            storyDatabase.storyDao().deleteAll()
+            storyDatabase.remoteKeysDao().deleteRemoteKeys()
+        }
+        userPreference.logout()
+    }
 
     suspend fun register(name: String, email: String, password: String): ResultState<String?> =
         safeApiCall { apiService.register(name, email, password).message }
@@ -41,14 +56,37 @@ class StoryRepository private constructor(
         result.name
     }
 
-    suspend fun getStories(): ResultState<List<ListStoryItem>> =
-        safeApiCall { apiService.getStories().listStory }
+    @OptIn(ExperimentalPagingApi::class)
+    fun getStories(): LiveData<PagingData<ListStoryItem>> = Pager(
+        config = PagingConfig(pageSize = PAGE_SIZE),
+        remoteMediator = StoryRemoteMediator(storyDatabase, apiService),
+        pagingSourceFactory = { storyDatabase.storyDao().getAllStories() }
+    ).liveData
 
-    suspend fun uploadStory(photo: File, description: String): ResultState<String?> = safeApiCall {
-        val descriptionBody = description.toRequestBody("text/plain".toMediaType())
-        val photoBody = photo.asRequestBody("image/jpeg".toMediaType())
-        val photoPart = MultipartBody.Part.createFormData("photo", photo.name, photoBody)
-        apiService.uploadStory(photoPart, descriptionBody).message
+    suspend fun getLatestStories(): ResultState<List<ListStoryItem>> =
+        safeApiCall { apiService.getStories(size = WIDGET_SIZE).listStory }
+
+    suspend fun getStoriesWithLocation(): ResultState<List<ListStoryItem>> =
+        safeApiCall { apiService.getStoriesWithLocation().listStory }
+
+    suspend fun uploadStory(
+        photo: File,
+        description: String,
+        lat: Double?,
+        lon: Double?
+    ): ResultState<String?> = safeApiCall {
+        val textMediaType = "text/plain".toMediaType()
+        val photoPart = MultipartBody.Part.createFormData(
+            "photo",
+            photo.name,
+            photo.asRequestBody("image/jpeg".toMediaType())
+        )
+        apiService.uploadStory(
+            photo = photoPart,
+            description = description.toRequestBody(textMediaType),
+            lat = lat?.toString()?.toRequestBody(textMediaType),
+            lon = lon?.toString()?.toRequestBody(textMediaType)
+        ).message
     }
 
     private suspend fun <T> safeApiCall(block: suspend () -> T): ResultState<T> = try {
@@ -69,12 +107,18 @@ class StoryRepository private constructor(
     }
 
     companion object {
+        private const val PAGE_SIZE = 10
+        private const val WIDGET_SIZE = 10
+
         @Volatile
         private var INSTANCE: StoryRepository? = null
 
-        fun getInstance(apiService: ApiService, userPreference: UserPreference): StoryRepository =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: StoryRepository(apiService, userPreference).also { INSTANCE = it }
-            }
+        fun getInstance(
+            apiService: ApiService,
+            userPreference: UserPreference,
+            storyDatabase: StoryDatabase
+        ): StoryRepository = INSTANCE ?: synchronized(this) {
+            INSTANCE ?: StoryRepository(apiService, userPreference, storyDatabase).also { INSTANCE = it }
+        }
     }
 }

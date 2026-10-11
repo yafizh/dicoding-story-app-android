@@ -19,7 +19,7 @@ class StackRemoteViewsFactory(private val context: Context) : RemoteViewsService
     override fun onCreate() = Unit
 
     override fun onDataSetChanged() {
-        stories = when (val result = runBlocking { repository.getStories() }) {
+        stories = when (val result = runBlocking { repository.getLatestStories() }) {
             is ResultState.Success -> result.data
             else -> emptyList()
         }

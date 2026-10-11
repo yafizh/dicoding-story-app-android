@@ -43,6 +43,17 @@
     <string name="dialog_failed_title">Gagal</string>
     <string name="ok">OK</string>
 
+    <string name="menu_map">Peta Cerita</string>
+    <string name="title_map">Peta Cerita</string>
+    <string name="no_story_location">Belum ada cerita dengan lokasi</string>
+    <string name="error_load_more">Gagal memuat cerita berikutnya</string>
+    <string name="button_retry">Coba Lagi</string>
+    <string name="cancel">Batal</string>
+    <string name="switch_location">Bagikan lokasi saya saat ini</string>
+    <string name="location_format">Lokasi: %1$.5f, %2$.5f</string>
+    <string name="error_location_permission">Izin lokasi ditolak</string>
+    <string name="error_location_unavailable">Tidak dapat memperoleh lokasi saat ini</string>
+
     <string name="cd_app_logo">Logo aplikasi</string>
     <string name="cd_story_photo">Foto cerita</string>
     <string name="cd_preview_photo">Pratinjau foto yang dipilih</string>

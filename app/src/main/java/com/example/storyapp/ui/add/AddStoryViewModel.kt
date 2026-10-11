@@ -1,5 +1,6 @@
 package com.example.storyapp.ui.add
 
+import android.location.Location
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,6 +15,9 @@ class AddStoryViewModel(private val repository: StoryRepository) : ViewModel() {
 
     private val _imageUri = MutableLiveData<Uri>()
     val imageUri: LiveData<Uri> = _imageUri
+
+    private val _location = MutableLiveData<Location?>()
+    val location: LiveData<Location?> = _location
 
     private val _uploadResult = MutableLiveData<ResultState<String?>>()
     val uploadResult: LiveData<ResultState<String?>> = _uploadResult
@@ -33,10 +37,20 @@ class AddStoryViewModel(private val repository: StoryRepository) : ViewModel() {
         pendingCameraUri = null
     }
 
+    fun setLocation(location: Location?) {
+        _location.value = location
+    }
+
     fun uploadStory(photo: File, description: String) {
+        val currentLocation = _location.value
         _uploadResult.value = ResultState.Loading
         viewModelScope.launch {
-            _uploadResult.value = repository.uploadStory(photo, description)
+            _uploadResult.value = repository.uploadStory(
+                photo = photo,
+                description = description,
+                lat = currentLocation?.latitude,
+                lon = currentLocation?.longitude
+            )
         }
     }
 }
